@@ -1,13 +1,17 @@
-
 require('dotenv').config();
 
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors');
+const helmet = require('helmet');
 
 const data = require('./movies-data-small.json');
 
 const app = express();
 app.use(morgan('dev'));
+app.use(helmet());
+app.use(cors());
+
 app.use(validateAuthorization);
 
 function validateAuthorization(req, res, next) {
@@ -17,12 +21,17 @@ function validateAuthorization(req, res, next) {
   if (authValue === undefined) {
     return res.status(400).json({ error: 'Authorization header missing' });
   }
+  
+  // change authValue to lowercase for case insensitivity
   else if (!authValue.toLowerCase().includes('bearer ')) {
     return res.status(400).json({ error: 'Invalid Authorization, must use Bearer strategy.' });
   }
+
+  // isolate token from authValue
   else if (authValue.split(' ')[1] !== API_TOKEN) {
     return res.status(401).json({ error: ' Invalid credentials' });
   }
+
   next();
 }
 
@@ -39,7 +48,7 @@ function getMovie(req, res) {
 
     // check that search field is allowed
     if (!searchFields.includes(field)) {
-      return res.status(400).json({ error: `Search by '${field}' not allowed. Must be one of [${searchFields}]` });
+      return res.status(400).json({ error: `Search by '${field}' not allowed. Must be one of ${searchFields.join(', ')}` });
     }
 
     // handle different filters
