@@ -6,13 +6,28 @@ const morgan = require('morgan');
 
 const data = require('./movies-data-small.json');
 
-const API_TOKEN = process.env.API_TOKEN;
-
 const app = express();
 app.use(morgan('dev'));
+app.use(validateAuthorization);
+
+function validateAuthorization(req, res, next) {
+  const API_TOKEN = process.env.API_TOKEN;
+  const authValue = req.get('Authorization');
+
+  if (authValue === undefined) {
+    return res.status(400).json({ error: 'Authorization header missing' });
+  }
+  else if (!authValue.toLowerCase().includes('bearer ')) {
+    return res.status(400).json({ error: 'Invalid Authorization, must use Bearer strategy.' });
+  }
+  else if (authValue.split(' ')[1] !== API_TOKEN) {
+    return res.status(401).json({ error: ' Invalid credentials' });
+  }
+  next();
+}
 
 function getMovie(req, res) {
-  
+
   let movies = [...data];
   const searchFields = ['genre', 'country', 'avg_vote'];
 
@@ -24,11 +39,11 @@ function getMovie(req, res) {
 
     // check that search field is allowed
     if (!searchFields.includes(field)) {
-      return res.status(400).json({ error: `Search by '${field}' not allowed. Must be one of [${searchFields}]` })
+      return res.status(400).json({ error: `Search by '${field}' not allowed. Must be one of [${searchFields}]` });
     }
 
     // handle different filters
-    if (key === 'avg_vote') {   
+    if (key === 'avg_vote') {
       movies = movies.filter(movie => movie[field] >= value);
     } else {
       movies = movies.filter(movie => movie[field].toLowerCase().includes(value));
