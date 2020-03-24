@@ -44,7 +44,7 @@ function getMovie(req, res) {
 
     // change values to lowercase for case insensitivity
     let field = key.toLowerCase();
-    let value = req.query[key];
+    let value = req.query[key].toLowerCase();
 
     // check that search field is allowed
     if (!searchFields.includes(field)) {
