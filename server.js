@@ -8,11 +8,11 @@ const helmet = require('helmet');
 const data = require('./movies-data-small.json');
 
 const app = express();
-app.use(morgan('dev'));
+
+const morganSetting = process.env.NODE_ENV === 'production' ? 'tiny' : 'common';
+app.use(morgan(morganSetting));
 app.use(helmet());
 app.use(cors());
-
-app.use(validateAuthorization);
 
 function validateAuthorization(req, res, next) {
   const API_TOKEN = process.env.API_TOKEN;
@@ -64,7 +64,20 @@ function getMovie(req, res) {
 
 }
 
-app.get('/movie', getMovie);
+app.get('/', (req, res) => res.send('Hello world!'));
+app.get('/movie', validateAuthorization, getMovie);
 
-// eslint-disable-next-line no-console
-app.listen('8080', () => console.log('Server live on :8080'));
+// error handling
+// eslint-disable-next-line no-unused-vars
+app.use((error, req, res, next) => {
+  let response;
+  if (process.env.NODE_ENV === 'production') {
+    response = { error: { message: 'server error' }};
+  } else {
+    response = { error };
+  }
+  res.status(500).json(response);
+});
+
+const PORT = process.env.PORT || 8000;
+app.listen(PORT);
