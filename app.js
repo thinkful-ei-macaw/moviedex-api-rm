@@ -66,4 +66,5 @@ function getMovie(req, res) {
 
 app.get('/movie', getMovie);
 
+// eslint-disable-next-line no-console
 app.listen('8080', () => console.log('Server live on :8080'));
